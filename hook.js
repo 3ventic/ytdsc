@@ -15,6 +15,8 @@ var channelId = process.env.CHID || 'UC1CSCMwaDubQ4rcYCpX40Eg';
 var topic = 'https://www.youtube.com/xml/feeds/videos.xml?channel_id=' + channelId;
 var hub = 'https://pubsubhubbub.appspot.com/';
 
+var lastId = '';
+
 var pubSubSubscriber = pubSubHubbub.createServer({
     callbackUrl: process.env.CALLBACK
 });
@@ -27,8 +29,11 @@ pubSubSubscriber.on('listen', function () {
     pubSubSubscriber.on('unsubscribe', function (data) {
         console.log(data.topic + ' unsubscribed');
     });
-    pubSubSubscriber.subscribe(topic, hub, function (err) {
+    pubSubSubscriber.unsubscribe(topic, hub, function (err) {
         if (err) console.error(err);
+        pubSubSubscriber.subscribe(topic, hub, function (err) {
+            if (err) console.error(err);
+        });
     });
     pubSubSubscriber.on('feed', function (data) {
         var feedstr = data.feed.toString('utf8');
@@ -45,7 +50,8 @@ pubSubSubscriber.on('listen', function () {
 });
 
 function postToHook(entry) {
-    if (entry["published"] && entry["yt:channelId"] == channelId) {
+    if (entry["published"] && entry["yt:channelId"] == channelId && lastId != entry['yt:videoId']) {
+        lastId = entry['yt:videoId'];
         request.post(process.env.HOOKURL, {
             form: {
                 content: "New upload: " + entry["title"] + " - https://youtu.be/" + entry['yt:videoId'],
