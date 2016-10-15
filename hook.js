@@ -11,7 +11,8 @@ if (!process.env.CALLBACK) {
     process.exit(1);
 }
 
-var topic = 'https://www.youtube.com/xml/feeds/videos.xml?channel_id=' + (process.env.CHID || 'UC1CSCMwaDubQ4rcYCpX40Eg');
+var channelId = process.env.CHID || 'UC1CSCMwaDubQ4rcYCpX40Eg';
+var topic = 'https://www.youtube.com/xml/feeds/videos.xml?channel_id=' + channelId;
 var hub = 'https://pubsubhubbub.appspot.com/';
 
 var pubSubSubscriber = pubSubHubbub.createServer({
@@ -44,7 +45,7 @@ pubSubSubscriber.on('listen', function () {
 });
 
 function postToHook(entry) {
-    if (entry["published"]) {
+    if (entry["published"] && entry["yt:channelId"] == channelId) {
         request.post(process.env.HOOKURL, {
             form: {
                 content: "New upload: " + entry["title"] + " - https://youtu.be/" + entry['yt:videoId'],
