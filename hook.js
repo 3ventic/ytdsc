@@ -23,6 +23,16 @@ var pubSubSubscriber = pubSubHubbub.createServer({
 });
 pubSubSubscriber.listen(process.env.PORT || 8000);
 
+pubSubSubscriber.on('denied', function () {
+    console.error('DENIED', JSON.stringify(arguments));
+    process.exit(2);
+});
+
+pubSubSubscriber.on('error', function () {
+    console.error('ERROR', JSON.stringify(arguments));
+    process.exit(3);
+});
+
 pubSubSubscriber.on('listen', function () {
     pubSubSubscriber.on('subscribe', function (data) {
         console.log(data.topic + ' subscribed');
