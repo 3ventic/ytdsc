@@ -19,7 +19,10 @@ Youtube to Discord webhooks
 
 ### Example
 
-`$ CALLBACK=http://example.com:8000/ HOOKURL=https://discordapp.com/api/webhooks/... CHID=UCS1mJfvqhIuv0-MREnvTZIA node hook.js`
+```
+$ npm install
+$ CALLBACK=http://example.com:8000/ HOOKURL=https://discordapp.com/api/webhooks/... CHID=UCS1mJfvqhIuv0-MREnvTZIA node hook.js
+```
 
 ### Systemd Unit Example
 
