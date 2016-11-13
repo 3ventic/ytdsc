@@ -29,6 +29,8 @@ $ CALLBACK=http://example.com:8000/ HOOKURL=https://discordapp.com/api/webhooks/
 ```
 [Unit]
 Description=Youtube Uploads to Discord Webhooks
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Environment="CALLBACK=http://example.com:8000/"
