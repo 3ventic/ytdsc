@@ -33,9 +33,13 @@ pubSubSubscriber.on('error', function () {
     process.exit(3);
 });
 
+setInterval(function () {
+    pubSubSubscriber.subscribe(topic, hub, function (err) { if (err) console.error(err); });
+}, 86400000); // refresh subscription every 24 hours
+
 pubSubSubscriber.on('listen', function () {
     pubSubSubscriber.on('subscribe', function (data) {
-        console.log(data.topic + ' subscribed');
+        console.log(data.topic + ' subscribed until ' + (new Date(data.lease * 1000)).toLocaleString());
     });
     pubSubSubscriber.on('unsubscribe', function (data) {
         console.log(data.topic + ' unsubscribed');
