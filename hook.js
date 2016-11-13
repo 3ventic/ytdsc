@@ -38,21 +38,22 @@ setInterval(function () {
 }, 86400000); // refresh subscription every 24 hours
 
 pubSubSubscriber.on('listen', function () {
+    // log successful subscriptions
     pubSubSubscriber.on('subscribe', function (data) {
         console.log(data.topic + ' subscribed until ' + (new Date(data.lease * 1000)).toLocaleString());
     });
+    // resubscribe, if unsubscribed while running
     pubSubSubscriber.on('unsubscribe', function (data) {
         console.log(data.topic + ' unsubscribed');
         if (!isExiting) {
             pubSubSubscriber.subscribe(topic, hub, function (err) { if (err) console.error(err); });
         }
     });
-    pubSubSubscriber.unsubscribe(topic, hub, function (err) {
+    // Subscribe on start
+    pubSubSubscriber.subscribe(topic, hub, function (err) {
         if (err) console.error(err);
-        pubSubSubscriber.subscribe(topic, hub, function (err) {
-            if (err) console.error(err);
-        });
     });
+    // Parse responses
     pubSubSubscriber.on('feed', function (data) {
         var feedstr = data.feed.toString('utf8');
         parseXml(feedstr, function (err, feed) {
@@ -69,6 +70,7 @@ pubSubSubscriber.on('listen', function () {
 
 function postToHook(entry) {
     console.log('Last', lastId, 'current', entry['yt:videoId'][0]);
+    // Ensure it's a video upload and not a duplicate entry
     if (entry["published"] && entry["yt:channelId"] == channelId && lastId != entry['yt:videoId'][0]) {
         lastId = entry['yt:videoId'][0];
         console.log('newlast', lastId);
@@ -86,5 +88,6 @@ function postToHook(entry) {
 
 process.on('SIGINT', function () {
     isExiting = true;
+    // Unsubscribe on exit
     pubSubSubscriber.unsubscribe(topic, hub, function (err) { if (err) console.log(err); process.exit(0); });
 });
