@@ -21,7 +21,6 @@ var isExiting = false;
 var pubSubSubscriber = pubSubHubbub.createServer({
     callbackUrl: process.env.CALLBACK
 });
-pubSubSubscriber.listen(process.env.PORT || 8000);
 
 pubSubSubscriber.on('denied', function () {
     console.error('DENIED', JSON.stringify(arguments));
@@ -38,6 +37,7 @@ setInterval(function () {
 }, 86400000); // refresh subscription every 24 hours
 
 pubSubSubscriber.on('listen', function () {
+    console.log('listening');
     // log successful subscriptions
     pubSubSubscriber.on('subscribe', function (data) {
         console.log(data.topic + ' subscribed until ' + (new Date(data.lease * 1000)).toLocaleString());
@@ -68,19 +68,30 @@ pubSubSubscriber.on('listen', function () {
     });
 });
 
+pubSubSubscriber.listen(process.env.PORT || 8000);
+
 function postToHook(entry) {
     console.log('Last', lastId, 'current', entry['yt:videoId'][0]);
     // Ensure it's a video upload and not a duplicate entry
-    if (entry["published"] && entry["yt:channelId"] == channelId && lastId != entry['yt:videoId'][0]) {
+    if (entry["published"]
+		&& entry["yt:channelId"] == channelId
+		&& lastId != entry['yt:videoId'][0]
+		&& ((new Date(entry['updated'])).getTime() - (new Date(entry['published'])).getTime()) < 60 * 60 * 1000 // 5 min
+	) {
         lastId = entry['yt:videoId'][0];
         console.log('newlast', lastId);
-        request.post(process.env.HOOKURL, {
+        request.post({
+            url: process.env.HOOKURL,
             form: {
                 content: "New upload: " + entry["title"] + " - https://youtu.be/" + entry['yt:videoId'][0],
                 embeds: [{
                     video: "https://youtu.be/" + entry['yt:videoId'][0]
                 }]
             }
+        }, function (err, response, body) {
+            if (err) { console.log('error:', err); }
+            if (response) { console.log('status:', response.statusCode); }
+            if (body) { console.log('body:', body); }
         });
     }
 }
