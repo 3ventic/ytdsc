@@ -1,0 +1,8 @@
+version: '3'
+services:
+    ytdsc:
+        environment:
+            CALLBACK: 'http://example.com:8000/'
+            HOOKURL: 'https://discord.com/api/webhooks/...'
+            CHID: 'youtube-channel-id-here'
+            PORT: '8000'

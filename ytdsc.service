@@ -1,0 +1,21 @@
+[Unit]
+Description=Youtube Uploads to Discord Webhooks
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment="CALLBACK=http://example.com:8000/"
+Environment="CHID=UC1CSCMwaDubQ4rcYCpX40Eg"
+Environment="HOOKURL=https://discordapp.com/api/webhooks/..."
+TimeoutStartSec=0
+ExecStart=/usr/bin/node hook.js
+SyslogIdentifier=ytdsc
+WorkingDirectory=/path/to/ytdsc
+Restart=on-failure
+RestartSec=30s
+StandardOutput=journal
+StandardError=journal
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

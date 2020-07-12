@@ -1,0 +1,14 @@
+version: '3'
+services:
+    ytdsc:
+        container_name: ytdsc
+        image: docker.pkg.github.com/3ventic/ytdsc/ytdsc:latest
+        restart: always
+        stop_grace_period: 5s
+        ports:
+            - '8000:8000/tcp'
+        environment:
+            CALLBACK: 'http://example.com:8000/'
+            HOOKURL: 'https://discord.com/api/webhooks/...'
+            CHID: 'youtube-channel-id-here'
+            PORT: '8000'
