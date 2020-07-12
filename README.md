@@ -2,9 +2,13 @@
 
 Youtube to Discord webhooks
 
-## Usage
+![BOT, Upload Feed: New upload: SKYRIM - Special Edition: Museum Tour - https://youtu.be/f2Q-EB8N1H0](https://i.3v.fi/1594560690-1788.png)
 
-### Environment variables
+---
+
+## Configuration
+
+Configuration is done using environment variables:
 
 #### Required
 
@@ -16,17 +20,17 @@ Youtube to Discord webhooks
 -   `PORT` - change the port of the HTTP listener, 8000 by default
 -   `CHID` - Youtube ID of the channel you want to subscribe to, UC1CSCMwaDubQ4rcYCpX40Eg by default
 -   `UA` - the user-agent string used when making the POST request to Discord, ytdsc by default; you probably shouldn't change this
+-   `UPLOAD_MESSAGE` - override the "New upload:" in the example above with your own custom message, so you can @everyone to your hearts content.
 
-### System requirements
+---
 
-Requires either
+## Usage
 
-1. docker 19.03 (and optionally docker-compose 1.13.0+), or
-2. node 12+ and npm 6+
-
-May work on older versions in some cases.
+Running the application is supported via Docker or directly using node. System requirements marked with a star (\*) may work using older versions, but older versions are not supported.
 
 ### Docker Setup
+
+Requires Docker daemon 19.03\* or newer.
 
 #### Via docker
 
@@ -37,11 +41,17 @@ docker run -e 'CALLBACK=http://example.com:8000/' -e 'HOOKURL=https://discord.co
 
 #### Via docker-compose
 
+Requires docker-compose 1.13.0 or above.
+
 1. Copy `docker-compose.override.example.yml` into `docker-compose.override.yml`
-2. Edit the environment variables in the override.yml as documented above.
-3. Start the service using `docker-compose up -d`
+1. Edit the environment variables in the override.yml as documented above.
+1. Start the service using `docker-compose up -d`
+
+---
 
 ### Bare Setup
+
+Requires node 12* or above, and npm 6* or above.
 
 Recommended to run with `screen` or `tmux` or similar. Syntax below assumes bash or compatible shell. On Windows use Powershell and `$env:VARIABLE = 'value'` syntax.
 
@@ -52,9 +62,12 @@ $ CALLBACK=http://example.com:8000/ HOOKURL=https://discordapp.com/api/webhooks/
 
 ### Systemd Setup
 
+Requires node 12* or above, and npm 6* or above.
+
 1. Copy `ytdsc.service` into `/etc/systemd/system/ytdsc.service`
-2. Edit the enrivonment variables in the file.
-3. (Optional) Edit other unit configuration to match your needs.
-4. Run `systemctl daemon-reload` to pick up the new service.
-5. Run `systemctl start ytdsc.service`
-6. (Recommended) Run `systemctl enable ytdsc.service` to automatically start the service on reboot.
+1. Edit the enrivonment variables in the file.
+1.
+1. (Optional) Edit other unit configuration to match your needs.
+1. Run `systemctl daemon-reload` to pick up the new service.
+1. Run `systemctl start ytdsc.service`
+1. (Recommended) Run `systemctl enable ytdsc.service` to automatically start the service on reboot.

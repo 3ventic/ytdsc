@@ -7,8 +7,3 @@ services:
         stop_grace_period: 5s
         ports:
             - '8000:8000/tcp'
-        environment:
-            CALLBACK: 'http://example.com:8000/'
-            HOOKURL: 'https://discord.com/api/webhooks/...'
-            CHID: 'youtube-channel-id-here'
-            PORT: '8000'

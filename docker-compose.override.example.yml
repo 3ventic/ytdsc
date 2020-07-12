@@ -6,3 +6,4 @@ services:
             HOOKURL: 'https://discord.com/api/webhooks/...'
             CHID: 'youtube-channel-id-here'
             PORT: '8000'
+            UPLOAD_MESSAGE: 'New upload:'
