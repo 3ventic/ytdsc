@@ -1,6 +1,6 @@
 {
   "name": "ytdsc",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Youtube Uploads to Discord Webhooks",
   "main": "hook.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "homepage": "https://github.com/3ventic/ytdsc#readme",
   "dependencies": {
     "pubsubhubbub": "^0.4.1",
-    "request": "^2.75.0",
-    "xml2js": "^0.4.17"
+    "request": "^2.88.2",
+    "xml2js": "^0.4.23"
   }
 }
