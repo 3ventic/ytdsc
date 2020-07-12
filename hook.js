@@ -1,14 +1,14 @@
 var parseXml = require('xml2js').parseString;
-var pubSubHubbub = require("pubsubhubbub");
-var request = require("request").defaults({
-    'headers': {
-        'User-Agent': process.env.UA || 'ytdsc (+https://github.com/3ventic/ytdsc)'
-    }
+var pubSubHubbub = require('pubsubhubbub');
+var request = require('request').defaults({
+	headers: {
+		'User-Agent': process.env.UA || 'ytdsc (+https://github.com/3ventic/ytdsc)',
+	},
 });
 
 if (!process.env.CALLBACK) {
-    console.error("Please specify the CALLBACK environment variable");
-    process.exit(1);
+	console.error('Please specify the CALLBACK environment variable');
+	process.exit(1);
 }
 
 var channelId = process.env.CHID || 'UC1CSCMwaDubQ4rcYCpX40Eg';
@@ -19,86 +19,104 @@ var lastId = '';
 var isExiting = false;
 
 var pubSubSubscriber = pubSubHubbub.createServer({
-    callbackUrl: process.env.CALLBACK
+	callbackUrl: process.env.CALLBACK,
 });
 
 pubSubSubscriber.on('denied', function () {
-    console.error('DENIED', JSON.stringify(arguments));
-    process.exit(2);
+	console.error('DENIED', JSON.stringify(arguments));
+	process.exit(2);
 });
 
 pubSubSubscriber.on('error', function () {
-    console.error('ERROR', JSON.stringify(arguments));
-    process.exit(3);
+	console.error('ERROR', JSON.stringify(arguments));
+	process.exit(3);
 });
 
 setInterval(function () {
-    pubSubSubscriber.subscribe(topic, hub, function (err) { if (err) console.error(err); });
+	pubSubSubscriber.subscribe(topic, hub, function (err) {
+		if (err) console.error(err);
+	});
 }, 86400000); // refresh subscription every 24 hours
 
 pubSubSubscriber.on('listen', function () {
-    console.log('listening');
-    // log successful subscriptions
-    pubSubSubscriber.on('subscribe', function (data) {
-        console.log(data.topic + ' subscribed until ' + (new Date(data.lease * 1000)).toLocaleString());
-    });
-    // resubscribe, if unsubscribed while running
-    pubSubSubscriber.on('unsubscribe', function (data) {
-        console.log(data.topic + ' unsubscribed');
-        if (!isExiting) {
-            pubSubSubscriber.subscribe(topic, hub, function (err) { if (err) console.error(err); });
-        }
-    });
-    // Subscribe on start
-    pubSubSubscriber.subscribe(topic, hub, function (err) {
-        if (err) console.error(err);
-    });
-    // Parse responses
-    pubSubSubscriber.on('feed', function (data) {
-        var feedstr = data.feed.toString('utf8');
-        parseXml(feedstr, function (err, feed) {
-            if (err) {
-                console.error("ERROR", err);
-            }
-            console.log("JSON:", JSON.stringify(feed.feed));
-            if (feed.feed.entry) {
-                feed.feed.entry.forEach(postToHook);
-            } else console.log("No entry");
-        });
-    });
+	console.log('listening');
+	// log successful subscriptions
+	pubSubSubscriber.on('subscribe', function (data) {
+		console.log(data.topic + ' subscribed until ' + new Date(data.lease * 1000).toLocaleString());
+	});
+	// resubscribe, if unsubscribed while running
+	pubSubSubscriber.on('unsubscribe', function (data) {
+		console.log(data.topic + ' unsubscribed');
+		if (!isExiting) {
+			pubSubSubscriber.subscribe(topic, hub, function (err) {
+				if (err) console.error(err);
+			});
+		}
+	});
+	// Subscribe on start
+	pubSubSubscriber.subscribe(topic, hub, function (err) {
+		if (err) console.error(err);
+	});
+	// Parse responses
+	pubSubSubscriber.on('feed', function (data) {
+		var feedstr = data.feed.toString('utf8');
+		parseXml(feedstr, function (err, feed) {
+			if (err) {
+				console.error('ERROR', err);
+			}
+			console.log('JSON:', JSON.stringify(feed.feed));
+			if (feed.feed.entry) {
+				feed.feed.entry.forEach(postToHook);
+			} else console.log('No entry');
+		});
+	});
 });
 
 pubSubSubscriber.listen(process.env.PORT || 8000);
 
 function postToHook(entry) {
-    console.log('Last', lastId, 'current', entry['yt:videoId'][0]);
-    // Ensure it's a video upload and not a duplicate entry
-    if (entry["published"]
-		&& entry["yt:channelId"] == channelId
-		&& lastId != entry['yt:videoId'][0]
-		&& ((new Date(entry['updated'])).getTime() - (new Date(entry['published'])).getTime()) < 60 * 60 * 1000 // 5 min
+	console.log('Last', lastId, 'current', entry['yt:videoId'][0]);
+	// Ensure it's a video upload and not a duplicate entry
+	if (
+		entry['published'] &&
+		entry['yt:channelId'] == channelId &&
+		lastId != entry['yt:videoId'][0] &&
+		new Date(entry['updated']).getTime() - new Date(entry['published']).getTime() < 60 * 60 * 1000 // 5 min
 	) {
-        lastId = entry['yt:videoId'][0];
-        console.log('newlast', lastId);
-        request.post({
-            url: process.env.HOOKURL,
-            form: {
-                content: "New upload: " + entry["title"] + " - https://youtu.be/" + entry['yt:videoId'][0],
-                embeds: [{
-                    video: "https://youtu.be/" + entry['yt:videoId'][0]
-                }]
-            }
-        }, function (err, response, body) {
-            if (err) { console.log('error:', err); }
-            if (response) { console.log('status:', response.statusCode); }
-            if (body) { console.log('body:', body); }
-        });
-    }
+		lastId = entry['yt:videoId'][0];
+		console.log('newlast', lastId);
+		request.post(
+			{
+				url: process.env.HOOKURL,
+				form: {
+					content: 'New upload: ' + entry['title'] + ' - https://youtu.be/' + entry['yt:videoId'][0],
+					embeds: [
+						{
+							video: 'https://youtu.be/' + entry['yt:videoId'][0],
+						},
+					],
+				},
+			},
+			function (err, response, body) {
+				if (err) {
+					console.log('error:', err);
+				}
+				if (response) {
+					console.log('status:', response.statusCode);
+				}
+				if (body) {
+					console.log('body:', body);
+				}
+			}
+		);
+	}
 }
 
-
 process.on('SIGINT', function () {
-    isExiting = true;
-    // Unsubscribe on exit
-    pubSubSubscriber.unsubscribe(topic, hub, function (err) { if (err) console.log(err); process.exit(0); });
+	isExiting = true;
+	// Unsubscribe on exit
+	pubSubSubscriber.unsubscribe(topic, hub, function (err) {
+		if (err) console.log(err);
+		process.exit(0);
+	});
 });
