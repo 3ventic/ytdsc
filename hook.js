@@ -2,7 +2,7 @@ var parseXml = require('xml2js').parseString;
 var pubSubHubbub = require("pubsubhubbub");
 var request = require("request").defaults({
     'headers': {
-        'User-Agent': process.env.UA || 'ytdsc'
+        'User-Agent': process.env.UA || 'ytdsc (+https://github.com/3ventic/ytdsc)'
     }
 });
 
