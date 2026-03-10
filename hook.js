@@ -1,73 +1,78 @@
-var parseXml = require('xml2js').parseString;
-var pubSubHubbub = require('pubsubhubbub');
-var request = require('request').defaults({
-	headers: {
-		'User-Agent': process.env.UA || 'ytdsc (+https://github.com/3ventic/ytdsc)',
-	},
-});
+var parseXml = require("xml2js").parseString;
+var pubSubHubbub = require("pubsubhubbub");
+const userAgent = process.env.UA || "ytdsc (+https://github.com/3ventic/ytdsc)";
 
 if (!process.env.CALLBACK) {
-	console.error('Please specify the CALLBACK environment variable');
+	console.error("Please specify the CALLBACK environment variable");
 	process.exit(1);
 }
 
-var channelId = process.env.CHID || 'UC1CSCMwaDubQ4rcYCpX40Eg';
-var topic = 'https://www.youtube.com/xml/feeds/videos.xml?channel_id=' + channelId;
-var hub = 'https://pubsubhubbub.appspot.com/';
+var channelId = process.env.CHID || "UC1CSCMwaDubQ4rcYCpX40Eg";
+var topic =
+	"https://www.youtube.com/xml/feeds/videos.xml?channel_id=" + channelId;
+var hub = "https://pubsubhubbub.appspot.com/";
 
-var lastId = '';
+var lastId = "";
 var isExiting = false;
 
 var pubSubSubscriber = pubSubHubbub.createServer({
 	callbackUrl: process.env.CALLBACK,
 });
 
-pubSubSubscriber.on('denied', function () {
-	console.error('DENIED', JSON.stringify(arguments));
+pubSubSubscriber.on("denied", function () {
+	console.error("DENIED", JSON.stringify(arguments));
 	process.exit(2);
 });
 
-pubSubSubscriber.on('error', function () {
-	console.error('ERROR', JSON.stringify(arguments));
+pubSubSubscriber.on("error", function () {
+	console.error("ERROR", JSON.stringify(arguments));
 	process.exit(3);
 });
 
 setInterval(function () {
 	pubSubSubscriber.subscribe(topic, hub, function (err) {
-		if (err) console.error(err);
+		if (err)
+			console.error("Could not refresh subscription to " + topic + ": " + err);
 	});
 }, 86400000); // refresh subscription every 24 hours
 
-pubSubSubscriber.on('listen', function () {
-	console.log('listening');
+pubSubSubscriber.on("listen", function () {
+	console.log("listening");
 	// log successful subscriptions
-	pubSubSubscriber.on('subscribe', function (data) {
-		console.log(data.topic + ' subscribed until ' + new Date(data.lease * 1000).toLocaleString());
+	pubSubSubscriber.on("subscribe", function (data) {
+		console.log(
+			data.topic +
+				" subscribed until " +
+				new Date(data.lease * 1000).toLocaleString(),
+		);
 	});
 	// resubscribe, if unsubscribed while running
-	pubSubSubscriber.on('unsubscribe', function (data) {
-		console.log(data.topic + ' unsubscribed');
+	pubSubSubscriber.on("unsubscribe", function (data) {
+		console.log(data.topic + " unsubscribed");
 		if (!isExiting) {
 			pubSubSubscriber.subscribe(topic, hub, function (err) {
-				if (err) console.error(err);
+				if (err)
+					console.error("Could not resubscribe to " + topic + ": " + err);
+				else console.log("Resubscribed to " + topic);
 			});
 		}
 	});
 	// Subscribe on start
 	pubSubSubscriber.subscribe(topic, hub, function (err) {
-		if (err) console.error(err);
+		if (err) console.error("Could not subscribe to " + topic + ": " + err);
+		else console.log("Subscribed to " + topic);
 	});
 	// Parse responses
-	pubSubSubscriber.on('feed', function (data) {
-		var feedstr = data.feed.toString('utf8');
+	pubSubSubscriber.on("feed", function (data) {
+		var feedstr = data.feed.toString("utf8");
 		parseXml(feedstr, function (err, feed) {
 			if (err) {
-				console.error('ERROR', err);
+				console.error("ERROR", err);
 			}
-			console.log('JSON:', JSON.stringify(feed.feed));
+			console.log("JSON:", JSON.stringify(feed.feed));
 			if (feed.feed.entry) {
 				feed.feed.entry.forEach(postToHook);
-			} else console.log('No entry');
+			} else console.log("No entry");
 		});
 	});
 });
@@ -75,46 +80,51 @@ pubSubSubscriber.on('listen', function () {
 pubSubSubscriber.listen(process.env.PORT || 8000);
 
 function postToHook(entry) {
-	console.log('Last', lastId, 'current', entry['yt:videoId'][0]);
+	console.log("Last", lastId, "current", entry["yt:videoId"][0]);
 	// Ensure it's a video upload and not a duplicate entry
 	if (
-		entry['published'] &&
-		entry['yt:channelId'] == channelId &&
-		lastId != entry['yt:videoId'][0] &&
-		new Date(entry['updated']).getTime() - new Date(entry['published']).getTime() < 60 * 60 * 1000 // 5 min
+		entry["published"] &&
+		entry["yt:channelId"] == channelId &&
+		lastId != entry["yt:videoId"][0] &&
+		new Date(entry["updated"]).getTime() -
+			new Date(entry["published"]).getTime() <
+			60 * 60 * 1000 // 5 min
 	) {
-		lastId = entry['yt:videoId'][0];
-		console.log('newlast', lastId);
-		request.post(
-			{
-				url: process.env.HOOKURL,
-				form: {
-					content: `${process.env.UPLOAD_MESSAGE || 'New upload:'}) ${entry['title']} - https://youtu.be/${
-						entry['yt:videoId'][0]
-					}`,
-					embeds: [
-						{
-							video: 'https://youtu.be/' + entry['yt:videoId'][0],
-						},
-					],
-				},
+		lastId = entry["yt:videoId"][0];
+		console.log("newlast", lastId);
+		fetch(process.env.HOOKURL, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"User-Agent": userAgent,
 			},
-			function (err, response, body) {
-				if (err) {
-					console.log('error:', err);
-				}
-				if (response) {
-					console.log('status:', response.statusCode);
-				}
+			body: JSON.stringify({
+				content: `${process.env.UPLOAD_MESSAGE || "New upload:"}) ${entry["title"]} - https://youtu.be/${
+					entry["yt:videoId"][0]
+				}`,
+				embeds: [
+					{
+						video: "https://youtu.be/" + entry["yt:videoId"][0],
+					},
+				],
+			}),
+		})
+			.then(function (response) {
+				console.log("status:", response.status);
+				return response.text();
+			})
+			.then(function (body) {
 				if (body) {
-					console.log('body:', body);
+					console.log("body:", body);
 				}
-			}
-		);
+			})
+			.catch(function (err) {
+				console.log("error:", err);
+			});
 	}
 }
 
-process.on('SIGINT', function () {
+process.on("SIGINT", function () {
 	isExiting = true;
 	// Unsubscribe on exit
 	pubSubSubscriber.unsubscribe(topic, hub, function (err) {
