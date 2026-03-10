@@ -156,7 +156,7 @@ class PubSubHubbub extends Stream {
 			postParams.auth = this.auth;
 		}
 
-		let headers = Object.assing({}, this.headers);
+		let headers = Object.assign({}, this.headers);
 		headers["User-Agent"] = headers["User-Agent"] || "Node PubSubHubbub Client";
 		headers["Content-Type"] = "application/x-www-form-urlencoded";
 
