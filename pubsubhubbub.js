@@ -5,7 +5,6 @@
  * MIT licensed, adapted from https://github.com/andris9/pubsubhubbub
  */
 
-const request = require("request");
 const http = require("http");
 const urllib = require("url");
 const Stream = require("stream").Stream;
@@ -134,17 +133,6 @@ class PubSubHubbub extends Stream {
 			"hub.verify": "async",
 		};
 
-		let postParams = {
-			url: hub,
-			headers: this.headers,
-			form,
-			encoding: "utf-8",
-		};
-
-		if (this.auth) {
-			postParams.auth = this.auth;
-		}
-
 		if (this.leaseSeconds > 0) {
 			form["hub.lease_seconds"] = this.leaseSeconds;
 		}
@@ -157,21 +145,40 @@ class PubSubHubbub extends Stream {
 				.digest("hex");
 		}
 
-		request.post(postParams, (error, response, responseBody) => {
-			if (error) {
-				if (callback) {
-					return callback(error);
-				} else {
-					return this.emit("denied", {
-						topic,
-						error,
-					});
-				}
-			}
+		let postParams = {
+			url: hub,
+			headers: this.headers,
+			form,
+			encoding: "utf-8",
+		};
 
-			if (response.statusCode !== 202 && response.statusCode !== 204) {
-				let err = new Error("Invalid response status " + response.statusCode);
-				err.responseBody = (responseBody || "").toString();
+		if (this.auth) {
+			postParams.auth = this.auth;
+		}
+
+		let headers = Object.assing({}, this.headers);
+		headers["User-Agent"] = headers["User-Agent"] || "Node PubSubHubbub Client";
+		headers["Content-Type"] = "application/x-www-form-urlencoded";
+
+		fetch(hub, {
+			method: "POST",
+			headers,
+			body: new URLSearchParams(form).toString(),
+		})
+			.then((response) => {
+				return response
+					.text()
+					.then((responseBody) => ({ response, responseBody }));
+			})
+			.then(({ response, responseBody }) => {
+				if (response.status !== 202 && response.status !== 204) {
+					throw new Error(
+						"Invalid response status " + response.status + ": " + responseBody,
+					);
+				}
+				return callback && callback(null, topic);
+			})
+			.catch((err) => {
 				if (callback) {
 					return callback(err);
 				} else {
@@ -180,10 +187,7 @@ class PubSubHubbub extends Stream {
 						error: err,
 					});
 				}
-			}
-
-			return callback && callback(null, topic);
-		});
+			});
 	}
 
 	// PRIVATE API

@@ -1,5 +1,5 @@
 var parseXml = require("xml2js").parseString;
-var pubSubHubbub = require("pubsubhubbub");
+var pubSubHubbub = require("./pubsubhubbub");
 const userAgent = process.env.UA || "ytdsc (+https://github.com/3ventic/ytdsc)";
 
 if (!process.env.CALLBACK) {
