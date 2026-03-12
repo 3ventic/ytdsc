@@ -12,15 +12,15 @@ Configuration is done using environment variables:
 
 #### Required
 
--   `CALLBACK` - the URL your HTTP server is listening on
--   `HOOKURL` - the URL to the Discord webhook ([what's this?](https://i.3v.fi/1479042763_ME6x.png))
+- `CALLBACK` - the URL your HTTP server is listening on
+- `HOOKURL` - the URL to the Discord webhook from channel integrations
 
 #### Optional
 
--   `PORT` - change the port of the HTTP listener, 8000 by default
--   `CHID` - Youtube ID of the channel you want to subscribe to, UC1CSCMwaDubQ4rcYCpX40Eg by default
--   `UA` - the user-agent string used when making the POST request to Discord, ytdsc by default; you probably shouldn't change this
--   `UPLOAD_MESSAGE` - override the "New upload:" in the example above with your own custom message, so you can @everyone to your hearts content.
+- `PORT` - change the port of the HTTP listener, 8000 by default
+- `CHID` - Youtube ID of the channel you want to subscribe to, UC1CSCMwaDubQ4rcYCpX40Eg by default
+- `UA` - the user-agent string used when making the POST request to Discord, ytdsc by default; you probably shouldn't change this
+- `UPLOAD_MESSAGE` - override the "New upload:" in the example above with your own custom message, so you can @everyone to your hearts content.
 
 ---
 
@@ -51,7 +51,7 @@ Requires docker-compose 1.13.0 or above.
 
 ### Bare Setup
 
-Requires node 12* or above, and npm 6* or above.
+Requires node 24* or above, and npm 11* or above.
 
 Recommended to run with `screen` or `tmux` or similar. Syntax below assumes bash or compatible shell. On Windows use Powershell and `$env:VARIABLE = 'value'` syntax.
 
@@ -62,7 +62,7 @@ $ CALLBACK=http://example.com:8000/ HOOKURL=https://discordapp.com/api/webhooks/
 
 ### Systemd Setup
 
-Requires node 12* or above, and npm 6* or above.
+Requires node 24* or above, and npm 11* or above.
 
 1. Copy `ytdsc.service` into `/etc/systemd/system/ytdsc.service`
 1. Edit the enrivonment variables in the file.
