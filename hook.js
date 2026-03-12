@@ -102,11 +102,6 @@ function postToHook(entry) {
 				content: `${process.env.UPLOAD_MESSAGE || "New upload:"}) ${entry["title"]} - https://youtu.be/${
 					entry["yt:videoId"][0]
 				}`,
-				embeds: [
-					{
-						video: "https://youtu.be/" + entry["yt:videoId"][0],
-					},
-				],
 			}),
 		})
 			.then(function (response) {
